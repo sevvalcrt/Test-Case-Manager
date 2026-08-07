@@ -1,11 +1,24 @@
+import os
 import sqlite3
+
+# Proje kök dizini: database/database.py -> database/ -> TestCaseManager/
+PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)
+
+DB_PATH = os.path.join(PROJECT_ROOT, "data", "testcases.db")
 
 
 class Database:
 
     def __init__(self):
 
-        self.connection = sqlite3.connect("data/testcases.db")
+        os.makedirs(
+            os.path.dirname(DB_PATH),
+            exist_ok=True
+        )
+
+        self.connection = sqlite3.connect(DB_PATH)
 
         self.cursor = self.connection.cursor()
 

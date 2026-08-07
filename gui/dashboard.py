@@ -71,15 +71,20 @@ class Dashboard(ctk.CTkFrame):
             expand=True
         )
 
-        search = ctk.CTkEntry(
+        self.search_entry = ctk.CTkEntry(
             self.left_panel,
             placeholder_text="🔍 Test Ara..."
         )
 
-        search.pack(
+        self.search_entry.pack(
             fill="x",
             padx=15,
             pady=(20,10)
+        )
+
+        self.search_entry.bind(
+            "<KeyRelease>",
+            lambda event: self.load_tests()
         )
 
         title = ctk.CTkLabel(
@@ -348,6 +353,17 @@ class Dashboard(ctk.CTkFrame):
             widget.destroy()
 
         tests = self.db.get_all_test_cases()
+
+        query = self.search_entry.get().strip().lower()
+
+        if query:
+
+            tests = [
+                test
+                for test in tests
+                if query in test[0].lower()
+                or query in test[1].lower()
+            ]
 
         for test in tests:
 

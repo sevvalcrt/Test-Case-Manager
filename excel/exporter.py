@@ -1,7 +1,16 @@
+import os
 from copy import copy
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from database.database import Database
+
+# Proje kök dizini: excel/exporter.py -> excel/ -> TestCaseManager/
+PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)
+
+TEMPLATE_PATH = os.path.join(PROJECT_ROOT, "excel", "template.xlsx")
+EXPORT_PATH = os.path.join(PROJECT_ROOT, "export.xlsx")
 
 
 class ExcelExporter:
@@ -147,7 +156,7 @@ class ExcelExporter:
     def export(self):
 
         workbook = load_workbook(
-            "excel/template.xlsx"
+            TEMPLATE_PATH
         )
 
         summary = workbook["Test Senaryoları"]
@@ -571,7 +580,7 @@ class ExcelExporter:
         # =================================================
 
         workbook.save(
-            "export.xlsx"
+            EXPORT_PATH
         )
 
         self.db.close()
