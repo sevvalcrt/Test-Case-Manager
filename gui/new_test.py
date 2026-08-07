@@ -8,7 +8,7 @@ from database.database import Database
 
 class NewTestWindow(ctk.CTkToplevel):
 
-    def __init__(self, master, refresh_callback, tc_id=None):
+    def __init__(self, master, refresh_callback, tc_id=None, db=None):
 
         self.refresh_callback = refresh_callback
         self.edit_mode = tc_id is not None
@@ -17,15 +17,25 @@ class NewTestWindow(ctk.CTkToplevel):
 
         super().__init__(master)
 
-        self.db = Database()
+        if db is not None:
+            self.db = db
+            self.owns_db = False
+        else:
+            self.db = Database()
+            self.owns_db = True
 
         self.title(
             "Test Düzenle" if self.edit_mode else "Yeni Test Case"
         )
 
         self.geometry("1100x850")
-        self.grab_set()
         self.resizable(True, True)
+
+        # NOT: Bu pencere kasıtlı olarak grab_set() ile modal
+        # yapılmıyor. grab_set(), pencerenin küçültme (minimize)
+        # tuşunu tamamen tepkisiz bırakıyordu (hem bu pencerede
+        # hem de ana pencerede). Modal davranıştan (ana pencereye
+        # tıklanamaması) vazgeçerek küçültme sorunu çözülüyor.
 
         # =====================================================
         # BAŞLIK
@@ -435,6 +445,29 @@ class NewTestWindow(ctk.CTkToplevel):
 
         if self.edit_mode:
             self.load_test_data()
+
+        # =====================================================
+        # ÖNE GETİR
+        # =====================================================
+        # CTkToplevel, koyu tema başlık çubuğunu uygulamak için
+        # açılışta kısa süreliğine gizlenip tekrar gösteriliyor;
+        # bu yüzden bazen ana pencerenin arkasında kalabiliyor.
+        # lift()/focus_force() ile öne getiriyoruz; after() ile
+        # tekrarlamak, Windows'taki gecikmeli render'a karşı
+        # güvence sağlıyor.
+
+        self.lift()
+        self.focus_force()
+        self.after(150, self._bring_to_front)
+
+    def _bring_to_front(self):
+
+        try:
+            self.lift()
+            self.focus_force()
+        except Exception:
+            pass
+
     # =========================================================
     # SCROLL KONTROLLERİ
     # =========================================================
@@ -1390,10 +1423,11 @@ class NewTestWindow(ctk.CTkToplevel):
 
     def close_window(self):
 
-        try:
-            self.db.close()
-        except Exception:
-            pass
+        if self.owns_db:
+            try:
+                self.db.close()
+            except Exception:
+                pass
 
         self.destroy()
 
@@ -1415,7 +1449,7 @@ class NewTestWindow(ctk.CTkToplevel):
             pass
 
         try:
-            if hasattr(self, "db"):
+            if hasattr(self, "db") and self.owns_db:
                 self.db.close()
         except Exception:
             pass
