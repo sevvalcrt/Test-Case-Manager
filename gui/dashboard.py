@@ -1,17 +1,15 @@
 import customtkinter as ctk
 from gui.new_test import NewTestWindow
-from database.database import Database
 from tkinter import messagebox
-from gui.new_test import NewTestWindow
 from excel.exporter import ExcelExporter
 
 
 class Dashboard(ctk.CTkFrame):
 
-    def __init__(self, master):
+    def __init__(self, master, db):
         super().__init__(master)
 
-        self.db = Database()
+        self.db = db
 
         self.configure(fg_color="#1E1E1E")
 
@@ -171,7 +169,7 @@ class Dashboard(ctk.CTkFrame):
 
     def open_new_test(self):
 
-        NewTestWindow(self, self.load_tests)
+        NewTestWindow(self, self.load_tests, db=self.db)
 
     def show_test(self, tc_id):
 
@@ -406,16 +404,21 @@ class Dashboard(ctk.CTkFrame):
 
     def edit_test(self, tc_id):
 
+        def refresh():
+            self.load_tests()
+            self.show_test(tc_id)
+
         NewTestWindow(
             self,
-            self.load_tests,
-            tc_id
+            refresh,
+            tc_id,
+            db=self.db
         )
 
     def export_excel(self):
 
         try:
-            exporter = ExcelExporter()
+            exporter = ExcelExporter(self.db)
             exporter.export()
 
             messagebox.showinfo(
