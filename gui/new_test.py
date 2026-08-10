@@ -25,7 +25,7 @@ class NewTestWindow(ctk.CTkToplevel):
             self.owns_db = True
 
         self.title(
-            "Test Düzenle" if self.edit_mode else "Yeni Test Case"
+            "Test Düzenle" if self.edit_mode else "Yeni Test Senaryosu"
         )
 
         self.geometry("1100x850")
@@ -43,7 +43,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         title = ctk.CTkLabel(
             self,
-            text="Test Düzenle" if self.edit_mode else "Yeni Test Case",
+            text="Test Düzenle" if self.edit_mode else "Yeni Test Senaryosu",
             font=("Segoe UI", 24, "bold")
         )
 
@@ -136,7 +136,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             form,
-            text="Application"
+            text="Uygulama"
         ).pack(anchor="w", pady=(10, 0))
 
         self.application = ctk.CTkEntry(form)
@@ -148,7 +148,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             form,
-            text="Version"
+            text="Sürüm"
         ).pack(anchor="w", pady=(10, 0))
 
         self.version = ctk.CTkEntry(form)
@@ -166,7 +166,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             form,
-            text="Creator"
+            text="Oluşturan"
         ).pack(anchor="w", pady=(10, 0))
 
         self.creator = ctk.CTkEntry(form)
@@ -178,7 +178,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             form,
-            text="Create Date"
+            text="Oluşturma Tarihi"
         ).pack(anchor="w", pady=(10, 0))
 
         self.create_date = ctk.CTkEntry(form)
@@ -196,7 +196,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             form,
-            text="Priority"
+            text="Öncelik"
         ).pack(anchor="w", pady=(10, 0))
 
         self.priority = ctk.CTkOptionMenu(
@@ -213,17 +213,192 @@ class NewTestWindow(ctk.CTkToplevel):
         self.priority.pack(fill="x")
 
         # =====================================================
-        # AUTOMATION
+        # STATUS
         # =====================================================
 
-        self.automation = ctk.CTkCheckBox(
+        ctk.CTkLabel(
             form,
-            text="Automation"
+            text="Durum"
+        ).pack(anchor="w", pady=(10, 0))
+
+        self.status = ctk.CTkOptionMenu(
+            form,
+            values=[
+                "Beklemede",
+                "Başarılı",
+                "Başarısız",
+                "Engellendi"
+            ]
         )
 
-        self.automation.pack(
+        self.status.set("Beklemede")
+
+        self.status.pack(fill="x")
+
+        # =====================================================
+        # TEST TÜRÜ
+        # =====================================================
+
+        ctk.CTkLabel(
+            form,
+            text="Test Türü"
+        ).pack(anchor="w", pady=(10, 0))
+
+        self.test_type = ctk.CTkOptionMenu(
+            form,
+            values=[
+                "Fonksiyonel",
+                "Smoke",
+                "Regression",
+                "Integration",
+                "UI",
+                "Performance",
+                "Security",
+                "Usability"
+            ]
+        )
+
+        self.test_type.set("Fonksiyonel")
+
+        self.test_type.pack(fill="x")
+
+
+        # =====================================================
+        # TEST ORTAMI
+        # =====================================================
+
+        ctk.CTkLabel(
+            form,
+            text="Test Ortamı"
+        ).pack(anchor="w", pady=(10, 0))
+
+        self.test_environment = ctk.CTkEntry(
+            form,
+            placeholder_text="Örn: https://www.mango.com"
+        )
+
+        self.test_environment.pack(fill="x")
+
+        # =====================================================
+        # OTOMASYON BİLGİLERİ
+        # =====================================================
+
+        self.create_section_title(
+            form,
+            "Otomasyon Bilgileri"
+        )
+
+
+        # -----------------------------------------------------
+        # OTOMASYONA UYGUN MU?
+        # -----------------------------------------------------
+
+        self.automation_requested = ctk.CTkCheckBox(
+            form,
+            text="Otomasyonlaştırılsın mı?"
+        )
+
+        self.automation_requested.pack(
             anchor="w",
-            pady=15
+            pady=(10, 5)
+        )
+
+
+        # -----------------------------------------------------
+        # OTOMASYON TAMAMLANDI MI?
+        # -----------------------------------------------------
+
+        self.automation_completed = ctk.CTkCheckBox(
+            form,
+            text="Otomasyonlaştırıldı mı?"
+        )
+
+        self.automation_completed.pack(
+            anchor="w",
+            pady=5
+        )
+
+
+        # -----------------------------------------------------
+        # OTOMASYON SENARYO KARŞILIĞI
+        # -----------------------------------------------------
+
+        ctk.CTkLabel(
+            form,
+            text="Otomasyon Senaryo Karşılığı"
+        ).pack(
+            anchor="w",
+            pady=(10, 0)
+        )
+
+        self.automation_scenario = ctk.CTkEntry(
+            form,
+            placeholder_text="Örn: F01_TC_0007"
+        )
+
+        self.automation_scenario.pack(
+            fill="x"
+        )
+
+        # =====================================================
+        # HATA BİLGİLERİ
+        # =====================================================
+
+        self.create_section_title(
+            form,
+            "Hata Bilgileri"
+        )
+
+
+        # -----------------------------------------------------
+        # HATA KODU
+        # -----------------------------------------------------
+
+        ctk.CTkLabel(
+            form,
+            text="Hata Kodu"
+        ).pack(
+            anchor="w",
+            pady=(10, 0)
+        )
+
+        self.error_code = ctk.CTkEntry(
+            form,
+            placeholder_text="Örn: BUG-001"
+        )
+
+        self.error_code.pack(
+            fill="x"
+        )
+
+
+        # -----------------------------------------------------
+        # HATA ÖNCELİĞİ
+        # -----------------------------------------------------
+
+        ctk.CTkLabel(
+            form,
+            text="Hata Önceliği"
+        ).pack(
+            anchor="w",
+            pady=(10, 0)
+        )
+
+        self.error_priority = ctk.CTkOptionMenu(
+            form,
+            values=[
+                "Yok",
+                "Düşük",
+                "Orta",
+                "Yüksek",
+                "Kritik"
+            ]
+        )
+
+        self.error_priority.set("Yok")
+
+        self.error_priority.pack(
+            fill="x"
         )
 
         # =====================================================
@@ -232,7 +407,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         self.create_section_title(
             form,
-            "Preconditions"
+            "Ön Koşullar"
         )
 
         self.pre_frame = ctk.CTkFrame(
@@ -255,7 +430,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         self.create_section_title(
             form,
-            "Test Data"
+            "Test Verileri"
         )
 
         data_header = ctk.CTkFrame(
@@ -270,7 +445,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             data_header,
-            text="Data Key"
+            text="Veri Anahtarı"
         ).pack(
             side="left",
             fill="x",
@@ -280,7 +455,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             data_header,
-            text="Data Value"
+            text="Veri Değeri"
         ).pack(
             side="left",
             fill="x",
@@ -308,7 +483,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         self.create_section_title(
             form,
-            "Test Steps"
+            "Test Adımları"
         )
 
         step_header = ctk.CTkFrame(
@@ -322,10 +497,10 @@ class NewTestWindow(ctk.CTkToplevel):
         )
 
         headers = [
-            "Step No",
-            "Action",
-            "Test Data",
-            "Expected Result"
+            "Adım No",
+            "İşlem",
+            "Test Verileri",
+            "Beklenen Sonuç"
         ]
 
         for text in headers:
@@ -360,7 +535,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         self.create_section_title(
             form,
-            "Postconditions"
+            "Son Koşullar"
         )
 
         self.post_frame = ctk.CTkFrame(
@@ -1085,19 +1260,45 @@ class NewTestWindow(ctk.CTkToplevel):
             if self.edit_mode:
 
                 self.db.update_test_case(
-                    tc_id=tc_id,
-                    name=test_name,
-                    priority=self.priority.get(),
-                    application=self.application.get(),
-                    version=version,
-                    creator=self.creator.get(),
-                    create_date=self.create_date.get(),
-                    automation=(
-                        1
-                        if self.automation.get()
-                        else 0
-                    )
-                )
+                tc_id=tc_id,
+                name=test_name,
+                priority=self.priority.get(),
+                application=self.application.get(),
+                version=version,
+                creator=self.creator.get(),
+                create_date=self.create_date.get(),
+
+                automation=(
+                    1
+                    if self.automation_completed.get()
+                    else 0
+                ),
+
+                status=self.status.get(),
+
+                automation_requested=(
+                    1
+                    if self.automation_requested.get()
+                    else 0
+                ),
+
+                automation_completed=(
+                    1
+                    if self.automation_completed.get()
+                    else 0
+                ),
+
+                automation_scenario=self.automation_scenario.get().strip(),
+
+                test_type=self.test_type.get(),
+
+                test_environment=self.test_environment.get().strip(),
+
+                error_code=self.error_code.get().strip(),
+
+                error_priority=self.error_priority.get()
+            )
+                
 
                 # Eski detayları temizle
 
@@ -1109,19 +1310,44 @@ class NewTestWindow(ctk.CTkToplevel):
             else:
 
                 self.db.add_test_case(
-                    tc_id=tc_id,
-                    name=test_name,
-                    priority=self.priority.get(),
-                    application=self.application.get(),
-                    version=version,
-                    creator=self.creator.get(),
-                    create_date=self.create_date.get(),
-                    automation=(
-                        1
-                        if self.automation.get()
-                        else 0
-                    )
-                )
+                tc_id=tc_id,
+                name=test_name,
+                priority=self.priority.get(),
+                application=self.application.get(),
+                version=version,
+                creator=self.creator.get(),
+                create_date=self.create_date.get(),
+
+                automation=(
+                    1
+                    if self.automation_completed.get()
+                    else 0
+                ),
+
+                status=self.status.get(),
+
+                automation_requested=(
+                    1
+                    if self.automation_requested.get()
+                    else 0
+                ),
+
+                automation_completed=(
+                    1
+                    if self.automation_completed.get()
+                    else 0
+                ),
+
+                automation_scenario=self.automation_scenario.get().strip(),
+
+                test_type=self.test_type.get(),
+
+                test_environment=self.test_environment.get().strip(),
+
+                error_code=self.error_code.get().strip(),
+
+                error_priority=self.error_priority.get()
+            )
 
             # =================================================
             # PRECONDITIONS
@@ -1190,7 +1416,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
                     messagebox.showerror(
                         "Hata",
-                        "Step No boş bırakılamaz."
+                        "Adım No boş bırakılamaz."
                     )
 
                     return
@@ -1244,7 +1470,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
             messagebox.showerror(
                 "Hata",
-                "Version ve Step No alanları sayı olmalıdır."
+                "Sürüm ve Adım No alanları sayı olmalıdır."
             )
 
         except Exception as e:
@@ -1322,8 +1548,78 @@ class NewTestWindow(ctk.CTkToplevel):
             test[6]
         )
 
-        if test[7]:
-            self.automation.select()
+        # =====================================================
+        # OTOMASYON
+        # =====================================================
+
+        if len(test) > 9 and test[9]:
+            self.automation_requested.select()
+
+        if len(test) > 10 and test[10]:
+            self.automation_completed.select()
+
+
+        # =====================================================
+        # DURUM
+        # =====================================================
+
+        if len(test) > 8 and test[8]:
+            self.status.set(test[8])
+
+
+        # =====================================================
+        # TEST TÜRÜ
+        # =====================================================
+
+        if len(test) > 12 and test[12]:
+            self.test_type.set(test[12])
+
+
+        # =====================================================
+        # TEST ORTAMI
+        # =====================================================
+
+        if len(test) > 13 and test[13]:
+
+            self.test_environment.insert(
+                0,
+                test[13]
+            )
+
+
+        # =====================================================
+        # OTOMASYON SENARYO
+        # =====================================================
+
+        if len(test) > 11 and test[11]:
+
+            self.automation_scenario.insert(
+                0,
+                test[11]
+            )
+
+
+        # =====================================================
+        # HATA KODU
+        # =====================================================
+
+        if len(test) > 14 and test[14]:
+
+            self.error_code.insert(
+                0,
+                test[14]
+            )
+
+
+        # =====================================================
+        # HATA ÖNCELİĞİ
+        # =====================================================
+
+        if len(test) > 15 and test[15]:
+
+            self.error_priority.set(
+                test[15]
+            )
 
         # =====================================================
         # DEFAULT SATIRLARI TEMİZLE

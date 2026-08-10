@@ -1,140 +1,177 @@
-# 🧪 Test Case Manager
+# Test Case Manager
 
-Python, **CustomTkinter** ve **SQLite** ile geliştirilmiş, test senaryolarınızı tek bir masaüstü uygulamasından oluşturmanızı, düzenlemenizi ve **Excel'e** aktarmanızı sağlayan bir test case yönetim aracı.
+Python ve CustomTkinter kullanılarak geliştirilmiş, **manuel test senaryolarını oluşturma, düzenleme, yönetme ve Excel formatında dışa aktarma** amacı taşıyan masaüstü Test Case Management uygulamasıdır.
 
----
+## Özellikler
 
-## 📌 Özellikler
+* 📁 Proje oluşturma ve proje yönetimi
+* 🧪 Test case oluşturma, düzenleme ve silme
+* 🔎 Test case arama
+* 🏷️ Test durumu yönetimi
+* 🖥️ Test türü ve test ortamı bilgileri
+* 📝 Pre-condition, test data, test steps ve post-condition yönetimi
+* 🤖 Otomasyon durumu ve otomasyon senaryosu takibi
+* 🐞 Hata kodu ve hata önceliği bilgileri
+* 📊 Test case'leri Excel formatında dışa aktarma
+* 🔗 Excel içerisinde test case'ler arasında hyperlink desteği
+* 💾 Her proje için ayrı SQLite veritabanı
+* 🖥️ Modern CustomTkinter arayüzü
 
-- 📝 **Test Senaryosu Oluşturma / Düzenleme** — TC ID, isim, öncelik, uygulama, versiyon, oluşturan kişi ve tarih gibi meta bilgilerle birlikte
-- ✅ **Precondition / Postcondition** listeleri — dinamik satır ekleme/silme
-- 📊 **Test Data** yönetimi — key/value çiftleri halinde
-- 🔢 **Test Steps** — adım no, aksiyon, test verisi ve beklenen sonuç
-- 🤖 **Otomasyon durumu** işaretleme (Automated / Manual)
-- 📤 **Excel'e aktarım** — her test senaryosu için ayrı, biçimlendirilmiş bir detay sayfası ve hyperlink'li bir özet sayfası içeren `.xlsx` raporu
-- 🗑️ Test senaryosu **silme** (bağlı tüm precondition/postcondition/data/step kayıtlarıyla birlikte)
-- 💾 Yerel **SQLite** veritabanı — kuruluma gerek yok, harici sunucu bağımlılığı yok
+## Kullanılan Teknolojiler
 
----
+* **Python**
+* **CustomTkinter**
+* **SQLite**
+* **OpenPyXL**
+* **Tkinter**
 
-## 🖥️ Ekran Görünümü
+## Proje Yapısı
 
-Uygulama koyu temalı (dark mode) bir arayüz kullanır: solda test listesi ve arama alanı, sağda seçilen testin tüm detaylarının göründüğü kaydırılabilir bir panel bulunur.
-
----
-
-## 🛠️ Kullanılan Teknolojiler
-
-| Katman | Teknoloji |
-|---|---|
-| Arayüz (GUI) | [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) |
-| Veritabanı | SQLite3 (Python standart kütüphanesi) |
-| Excel Raporlama | [openpyxl](https://openpyxl.readthedocs.io/) |
-| Dil | Python 3.10+ |
-
----
-
-## 📁 Proje Yapısı
-
-```
+```text
 TestCaseManager/
-├── main.py                  # Uygulama giriş noktası
-├── requirements.txt         # Python bağımlılıkları
-├── data/
-│   └── testcases.db         # SQLite veritabanı (otomatik oluşturulur, git'e dahil değildir)
+│
 ├── database/
-│   ├── database.py          # SQLite bağlantısı ve tüm CRUD sorguları
-│   └── models.py            # TestCase / TestStep / TestData veri modelleri (dataclass)
+│   ├── database.py
+│   └── models.py
+│
 ├── excel/
-│   ├── exporter.py          # Excel export mantığı (openpyxl)
-│   └── template.xlsx        # Export için kullanılan şablon dosyası
-└── gui/
-    ├── app.py                # Ana pencere (CTk)
-    ├── dashboard.py           # Sol panel (liste) + sağ panel (detay) ekranı
-    └── new_test.py            # Yeni test oluşturma / düzenleme penceresi
+│   └── exporter.py
+│
+├── gui/
+│   ├── app.py
+│   ├── dashboard.py
+│   ├── new_test.py
+│   └── project_manager.py
+│
+├── projects/
+│   └── <ProjectName>/
+│       └── testcases.db
+│
+├── main.py
+├── requirements.txt
+└── README.md
 ```
 
----
+## Kurulum
 
-## 🚀 Kurulum
-
-### 1. Depoyu klonlayın
+Projeyi bilgisayarınıza klonlayın:
 
 ```bash
-git clone https://github.com/sevvalcrt/Test-Case-Manager.git
-cd Test-Case-Manager
+git clone <repository-url>
+cd TestCaseManager
 ```
 
-### 2. Sanal ortam oluşturun (önerilir)
-
-```bash
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# macOS / Linux
-source venv/bin/activate
-```
-
-### 3. Bağımlılıkları yükleyin
+Gerekli Python paketlerini yükleyin:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Uygulamayı çalıştırın
+## Uygulamayı Çalıştırma
+
+Projeyi çalıştırmak için:
 
 ```bash
 python main.py
 ```
 
-> İlk çalıştırmada `data/` klasörü altında `testcases.db` adında boş bir SQLite veritabanı otomatik olarak oluşturulur.
+Uygulama açıldığında proje yönetim ekranı üzerinden mevcut bir projeyi seçebilir veya yeni bir proje oluşturabilirsiniz.
 
----
+## Proje Yönetimi
 
-## 📖 Kullanım
+Her proje kendi SQLite veritabanına sahip olacak şekilde saklanır.
 
-1. Sol panelde **"➕ Yeni Test"** butonuna tıklayarak yeni bir test senaryosu formu açın.
-2. TC ID ve Test Adı zorunlu alanlardır; geri kalan bilgileri (precondition, test data, adımlar, postcondition) doldurun.
-3. Kaydettikten sonra test, sol panelde listelenir; üzerine tıklayarak sağ panelde tüm detaylarını görüntüleyebilirsiniz.
-4. **"✏ Düzenle"** ile mevcut bir testi güncelleyebilir, **"🗑 Sil"** ile silebilirsiniz.
-5. **"📤 Excel'e Aktar"** butonuyla tüm test senaryolarını, her biri için ayrı bir detay sayfası içeren `export.xlsx` dosyasına aktarabilirsiniz.
+Örneğin:
 
----
+```text
+projects/
+├── Mango/
+│   └── testcases.db
+│
+└── ExampleProject/
+    └── testcases.db
+```
 
-## 🗄️ Veritabanı Şeması
+Bu yapı sayesinde farklı projelerin test case'leri birbirinden bağımsız olarak yönetilebilir.
 
-| Tablo | Açıklama |
-|---|---|
-| `test_cases` | Ana test senaryosu bilgileri (tc_id, name, priority, application, version, creator, create_date, automation) |
-| `pre_conditions` | Her test senaryosuna bağlı ön koşullar |
-| `test_data` | Key/value formatında test verileri |
-| `test_steps` | Sıralı test adımları (step_no, action, test_data, expected_result) |
-| `post_conditions` | Her test senaryosuna bağlı son koşullar |
+## Test Case Bilgileri
 
-Tüm alt tablolar `tc_id` üzerinden `test_cases` tablosuna foreign key ile bağlıdır.
+Her test case aşağıdaki bilgileri içerebilir:
 
----
+* Test Case ID
+* Test Case Name
+* Test Type
+* Test Environment
+* Status
+* Pre-Conditions
+* Test Data
+* Test Steps
+* Post-Conditions
+* Automation Requested
+* Automation Completed
+* Automation Scenario
+* Error Code
+* Error Priority
 
-## 🤝 Katkıda Bulunma
+## Test Case Durumları
 
-Katkılarınızı memnuniyetle karşılarız:
+Test case'ler aşağıdaki durumlardan biriyle takip edilebilir:
 
-1. Bu repoyu fork'layın
-2. Yeni bir branch oluşturun (`git checkout -b ozellik/yeni-ozellik`)
-3. Değişikliklerinizi commit'leyin (`git commit -m 'Yeni özellik eklendi'`)
-4. Branch'inizi push'layın (`git push origin ozellik/yeni-ozellik`)
-5. Bir Pull Request açın
+* **Not Run**
+* **Passed**
+* **Failed**
+* **Blocked**
 
----
+## Excel Export
 
-## 📄 Lisans
+Test case'ler Excel formatında dışa aktarılabilir.
 
-Bu proje için henüz bir lisans belirlenmemiştir. Eklemek isterseniz [choosealicense.com](https://choosealicense.com/) üzerinden projenize uygun bir lisans (örn. MIT) seçebilirsiniz.
+Export işlemi sonucunda:
 
----
+* Test case özetlerinin bulunduğu bir ana sayfa
+* Her test case için ayrı detay sayfası
+* Test case'ler arasında hyperlinkler
+* Test bilgileri
+* Pre-condition
+* Test data
+* Test steps
+* Post-condition
+* Automation bilgileri
+* Hata bilgileri
 
-## 👤 Geliştirici
+oluşturulur.
 
-**sevvalcrt** — [GitHub](https://github.com/sevvalcrt)
+Excel dosyası manuel test sonuçlarının raporlanması ve paylaşılması için kullanılabilir.
+
+## Requirements
+
+Projenin çalışması için gerekli temel paketler:
+
+```text
+customtkinter>=5.2.2
+openpyxl>=3.1.5
+```
+
+Python'un güncel bir sürümünün kullanılması önerilir.
+
+## Kullanım
+
+1. Uygulamayı başlatın.
+2. Bir proje seçin veya yeni proje oluşturun.
+3. Dashboard üzerinden test case'leri görüntüleyin.
+4. Yeni test case oluşturun veya mevcut bir test case'i düzenleyin.
+5. Test adımlarını ve gerekli test bilgilerini ekleyin.
+6. Test durumunu güncelleyin.
+7. Gerektiğinde test case'leri Excel formatında dışa aktarın.
+
+## Amaç
+
+Bu proje, manuel test süreçlerinin daha düzenli şekilde yönetilmesini sağlamak ve test case'lerin merkezi bir masaüstü uygulaması üzerinden takip edilmesine yardımcı olmak amacıyla geliştirilmiştir.
+
+Ayrıca ilerleyen aşamalarda manuel test süreçlerinin otomasyon ile desteklenebilmesi için **automation status** ve **automation scenario** gibi alanlar da sisteme dahil edilmiştir.
+
+## Geliştirici
+
+**Şevval**
+
+Software Engineering Student
