@@ -343,7 +343,14 @@ class ProjectManager(ctk.CTkFrame):
             False
         )
 
-        dialog.grab_set()
+        # NOT: grab_set() kasıtlı olarak kullanılmıyor - bu,
+        # NewTestWindow'da tespit edilen aynı hataya (küçültme
+        # tuşunun tüm pencereleri dondurması) yol açıyordu.
+        # Bunun yerine pencereyi öne getiriyoruz.
+
+        dialog.lift()
+        dialog.focus_force()
+        dialog.after(150, lambda: (dialog.lift(), dialog.focus_force()))
 
         # -------------------------------------------------
         # Başlık
@@ -485,65 +492,65 @@ class ProjectManager(ctk.CTkFrame):
             pady=(20, 10)
         )
 
-        # =====================================================
-        # PROJE SİL
-        # =====================================================
+    # =====================================================
+    # PROJE SİL
+    # =====================================================
 
-        def delete_project(
-            self,
+    def delete_project(
+        self,
+        project_name
+    ):
+
+        answer = messagebox.askyesno(
+            "Projeyi Sil",
+            f"'{project_name}' projesini silmek istediğinize emin misiniz?\n\n"
+            "Bu işlem proje içindeki tüm test caselerini ve verileri silecektir.",
+            parent=self
+        )
+
+        if not answer:
+            return
+
+        # -------------------------------------------------
+        # Proje klasörü
+        # -------------------------------------------------
+
+        project_root = os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(__file__)
+            )
+        )
+
+        project_path = os.path.join(
+            project_root,
+            "projects",
             project_name
-        ):
+        )
 
-            answer = messagebox.askyesno(
-                "Projeyi Sil",
-                f"'{project_name}' projesini silmek istediğinize emin misiniz?\n\n"
-                "Bu işlem proje içindeki tüm test caselerini ve verileri silecektir.",
+        # -------------------------------------------------
+        # Sil
+        # -------------------------------------------------
+
+        try:
+
+            import shutil
+
+            shutil.rmtree(
+                project_path
+            )
+
+            self.load_projects()
+
+            messagebox.showinfo(
+                "Başarılı",
+                f"'{project_name}' projesi silindi.",
                 parent=self
             )
 
-            if not answer:
-                return
+        except Exception as e:
 
-            # -------------------------------------------------
-            # Proje klasörü
-            # -------------------------------------------------
-
-            project_root = os.path.dirname(
-                os.path.dirname(
-                    os.path.abspath(__file__)
-                )
+            messagebox.showerror(
+                "Hata",
+                f"Proje silinemedi.\n\n{str(e)}",
+                parent=self
             )
-
-            project_path = os.path.join(
-                project_root,
-                "projects",
-                project_name
-            )
-
-            # -------------------------------------------------
-            # Sil
-            # -------------------------------------------------
-
-            try:
-
-                import shutil
-
-                shutil.rmtree(
-                    project_path
-                )
-
-                self.load_projects()
-
-                messagebox.showinfo(
-                    "Başarılı",
-                    f"'{project_name}' projesi silindi.",
-                    parent=self
-                )
-
-            except Exception as e:
-
-                messagebox.showerror(
-                    "Hata",
-                    f"Proje silinemedi.\n\n{str(e)}",
-                    parent=self
-                )
