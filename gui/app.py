@@ -26,7 +26,7 @@ class App(ctk.CTk):
             "Test Senaryosu Yönetim Sistemi"
         )
 
-        self.geometry(
+        self.geometry( 
             "1400x800"
         )
 

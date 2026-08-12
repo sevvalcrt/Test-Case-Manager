@@ -71,9 +71,11 @@ TEMPLATE_PATH = os.path.join(
 )
 
 
-EXPORT_PATH = os.path.join(
-    PROJECT_ROOT,
-    "export.xlsx"
+EXPORT_DIR = os.path.join(PROJECT_ROOT, "exports")
+
+os.makedirs(
+    EXPORT_DIR,
+    exist_ok=True
 )
 
 
@@ -363,6 +365,674 @@ class ExcelExporter:
     # LABEL STYLE
     # =================================================
 
+    def export_project(self, project_name):
+
+        project_path = os.path.join(
+            PROJECT_ROOT,
+            "projects",
+            project_name
+        )
+
+        os.makedirs(
+            project_path,
+            exist_ok=True
+        )
+
+        project_excel_path = os.path.join(
+            project_path,
+            f"{project_name}.xlsx"
+        )
+
+        workbook = load_workbook(
+            TEMPLATE_PATH
+        )
+
+        summary = workbook[
+            "Test Senaryoları"
+        ]
+
+        # -------------------------------------------------
+        # ÖZET BAŞLIKLARI
+        # -------------------------------------------------
+
+        summary_headers = [
+            "Test ID",
+            "Test Adı",
+            "Öncelik",
+            "Modül",
+            "Test Türü",
+            "Durum",
+            "Test Ortamı",
+            "Oluşturulma Tarihi"
+        ]
+
+        header_fill = PatternFill(
+            fill_type="solid",
+            fgColor="1F4E78"
+        )
+
+        header_font = Font(
+            color="FFFFFF",
+            bold=True,
+            size=11
+        )
+
+        header_alignment = Alignment(
+            horizontal="center",
+            vertical="center",
+            wrap_text=True
+        )
+
+        for col, header in enumerate(
+            summary_headers,
+            start=1
+        ):
+
+            cell = summary.cell(
+                row=1,
+                column=col
+            )
+
+            cell.value = header
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+
+        summary.row_dimensions[1].height = 30
+
+        # -------------------------------------------------
+        # ÖZET KOLON GENİŞLİKLERİ
+        # -------------------------------------------------
+
+        summary.column_dimensions["A"].width = 18
+        summary.column_dimensions["B"].width = 40
+        summary.column_dimensions["C"].width = 15
+        summary.column_dimensions["D"].width = 20
+        summary.column_dimensions["E"].width = 20
+        summary.column_dimensions["F"].width = 18
+        summary.column_dimensions["G"].width = 40
+        summary.column_dimensions["H"].width = 20
+
+        # -------------------------------------------------
+        # ESKİ TESTLERİ TEMİZLE
+        # -------------------------------------------------
+
+        if summary.max_row > 1:
+
+            summary.delete_rows(
+                2,
+                summary.max_row - 1
+            )
+
+        # -------------------------------------------------
+        # TESTLERİ DATABASE'DEN AL
+        # -------------------------------------------------
+
+        tests = self.db.get_all_test_cases()
+
+        row = 2
+
+        for test in tests:
+
+            tc_id = test[0]
+
+            id_cell = summary.cell(
+                row=row,
+                column=1
+            )
+
+            id_cell.value = tc_id
+
+            id_cell.hyperlink = (
+                f"#'{tc_id}'!A1"
+            )
+
+            id_cell.style = "Hyperlink"
+
+            summary.cell(
+                row=row,
+                column=2
+            ).value = test[1]
+
+            summary.cell(
+                row=row,
+                column=3
+            ).value = test[2]
+
+            summary.cell(
+                row=row,
+                column=4
+            ).value = MODULE_TRANSLATIONS.get(
+                test[3],
+                test[3]
+            )
+
+            summary.cell(
+                row=row,
+                column=5
+            ).value = (
+                test[12]
+                if len(test) > 12
+                and test[12]
+                else "-"
+            )
+
+            status = STATUS_TRANSLATIONS.get(
+                test[8],
+                test[8]
+            )
+
+            status_cell = summary.cell(
+                row=row,
+                column=6
+            )
+
+            status_cell.value = status
+
+            self.apply_status_style(
+                status_cell,
+                status
+            )
+
+            summary.cell(
+                row=row,
+                column=7
+            ).value = (
+                test[13]
+                if len(test) > 13
+                and test[13]
+                else "-"
+            )
+
+            summary.cell(
+                row=row,
+                column=8
+            ).value = test[6]
+
+            # -------------------------------------------------
+            # DETAY SAYFASI
+            # -------------------------------------------------
+
+            if tc_id in workbook.sheetnames:
+
+                del workbook[tc_id]
+
+            template = workbook["Template"]
+
+            detail = workbook.copy_worksheet(
+                template
+            )
+
+            detail.title = tc_id
+
+            # -------------------------------------------------
+            # DETAY KOLON GENİŞLİKLERİ
+            # -------------------------------------------------
+
+            detail.column_dimensions["A"].width = 28
+            detail.column_dimensions["B"].width = 40
+            detail.column_dimensions["C"].width = 40
+            detail.column_dimensions["D"].width = 40
+
+            # -------------------------------------------------
+            # DATABASE
+            # -------------------------------------------------
+
+            pre = self.db.get_pre_conditions(
+                tc_id
+            )
+
+            data = self.db.get_test_data(
+                tc_id
+            )
+
+            steps = self.db.get_test_steps(
+                tc_id
+            )
+
+            post = self.db.get_post_conditions(
+                tc_id
+            )
+
+            # -------------------------------------------------
+            # GERİ DÖN
+            # -------------------------------------------------
+
+            detail["A1"] = "← Test Listesine Dön"
+
+            detail["A1"].hyperlink = (
+                "#'Test Senaryoları'!A1"
+            )
+
+            detail["A1"].style = "Hyperlink"
+
+            # -------------------------------------------------
+            # TEST BİLGİLERİ
+            # -------------------------------------------------
+
+            labels = [
+                "Test ID",
+                "Test Adı",
+                "Öncelik",
+                "Modül",
+                "Versiyon",
+                "Durum",
+                "Oluşturan",
+                "Oluşturulma Tarihi",
+                "Test Türü",
+                "Test Ortamı"
+            ]
+
+            values = [
+                tc_id,
+                test[1],
+                test[2],
+                MODULE_TRANSLATIONS.get(
+                    test[3],
+                    test[3]
+                ),
+                test[4],
+                STATUS_TRANSLATIONS.get(
+                    test[8],
+                    test[8]
+                ),
+                test[5],
+                test[6],
+                (
+                    test[12]
+                    if len(test) > 12
+                    and test[12]
+                    else "-"
+                ),
+                (
+                    test[13]
+                    if len(test) > 13
+                    and test[13]
+                    else "-"
+                )
+            ]
+
+            for i, (label, value) in enumerate(
+                zip(labels, values),
+                start=2
+            ):
+
+                label_cell = detail.cell(
+                    row=i,
+                    column=1
+                )
+
+                value_cell = detail.cell(
+                    row=i,
+                    column=2
+                )
+
+                label_cell.value = label
+                value_cell.value = value
+
+                self.apply_label_style(
+                    label_cell
+                )
+
+                value_cell.alignment = Alignment(
+                    vertical="top",
+                    wrap_text=True
+                )
+
+                if label == "Durum":
+
+                    self.apply_status_style(
+                        value_cell,
+                        test[8]
+                    )
+
+            # -------------------------------------------------
+            # DİNAMİK BÖLÜMLER
+            # -------------------------------------------------
+
+            current_row = 13
+
+            # -------------------------------------------------
+            # OTOMASYON BİLGİLERİ
+            # -------------------------------------------------
+
+            self.create_section_header(
+                detail,
+                current_row,
+                "Otomasyon Bilgileri"
+            )
+
+            current_row += 1
+
+            automation_labels = [
+                "Otomasyonlaştırılsın mı?",
+                "Otomasyonlaştırıldı mı?",
+                "Otomasyon Senaryo Karşılığı"
+            ]
+
+            automation_values = [
+                (
+                    "Evet"
+                    if len(test) > 9
+                    and test[9]
+                    else "Hayır"
+                ),
+                (
+                    "Evet"
+                    if len(test) > 10
+                    and test[10]
+                    else "Hayır"
+                ),
+                (
+                    test[11]
+                    if len(test) > 11
+                    and test[11]
+                    else "-"
+                )
+            ]
+
+            for label, value in zip(
+                automation_labels,
+                automation_values
+            ):
+
+                label_cell = detail.cell(
+                    row=current_row,
+                    column=1
+                )
+
+                value_cell = detail.cell(
+                    row=current_row,
+                    column=2
+                )
+
+                label_cell.value = label
+                value_cell.value = value
+
+                self.apply_label_style(
+                    label_cell
+                )
+
+                value_cell.alignment = Alignment(
+                    vertical="top",
+                    wrap_text=True
+                )
+
+                current_row += 1
+
+            current_row += 1
+
+            # -------------------------------------------------
+            # HATA BİLGİLERİ
+            # -------------------------------------------------
+
+            self.create_section_header(
+                detail,
+                current_row,
+                "Hata Bilgileri"
+            )
+
+            current_row += 1
+
+            error_labels = [
+                "Hata Kodu",
+                "Hata Önceliği"
+            ]
+
+            error_values = [
+                (
+                    test[14]
+                    if len(test) > 14
+                    and test[14]
+                    else "-"
+                ),
+                (
+                    test[15]
+                    if len(test) > 15
+                    and test[15]
+                    else "Yok"
+                )
+            ]
+
+            for label, value in zip(
+                error_labels,
+                error_values
+            ):
+
+                label_cell = detail.cell(
+                    row=current_row,
+                    column=1
+                )
+
+                value_cell = detail.cell(
+                    row=current_row,
+                    column=2
+                )
+
+                label_cell.value = label
+                value_cell.value = value
+
+                self.apply_label_style(
+                    label_cell
+                )
+
+                value_cell.alignment = Alignment(
+                    vertical="top",
+                    wrap_text=True
+                )
+
+                current_row += 1
+
+            current_row += 1
+
+            self.create_section_header(
+                detail,
+                current_row,
+                "Ön Koşullar"
+            )
+
+            current_row += 1
+
+            if not pre:
+
+                detail.cell(
+                    row=current_row,
+                    column=2
+                ).value = "Ön koşul bulunmuyor."
+
+                current_row += 1
+
+            else:
+
+                for item in pre:
+
+                    cell = detail.cell(
+                        row=current_row,
+                        column=2
+                    )
+
+                    cell.value = item[0]
+
+                    cell.alignment = Alignment(
+                        vertical="top",
+                        wrap_text=True
+                    )
+
+                    current_row += 1
+
+            current_row += 1
+
+            self.create_section_header(
+                detail,
+                current_row,
+                "Test Verileri"
+            )
+
+            current_row += 1
+
+            if not data:
+
+                detail.cell(
+                    row=current_row,
+                    column=2
+                ).value = "Test verisi bulunmuyor."
+
+                current_row += 1
+
+            else:
+
+                for item in data:
+
+                    cell_b = detail.cell(
+                        row=current_row,
+                        column=2
+                    )
+
+                    cell_c = detail.cell(
+                        row=current_row,
+                        column=3
+                    )
+
+                    cell_b.value = item[0]
+                    cell_c.value = item[1]
+
+                    cell_b.alignment = Alignment(
+                        vertical="top",
+                        wrap_text=True
+                    )
+
+                    cell_c.alignment = Alignment(
+                        vertical="top",
+                        wrap_text=True
+                    )
+
+                    current_row += 1
+
+            current_row += 1
+
+            self.create_section_header(
+                detail,
+                current_row,
+                "Test Adımları"
+            )
+
+            current_row += 1
+
+            self.create_step_headers(
+                detail,
+                current_row
+            )
+
+            current_row += 1
+
+            if not steps:
+
+                detail.cell(
+                    row=current_row,
+                    column=2
+                ).value = "Test adımı bulunmuyor."
+
+                current_row += 1
+
+            else:
+
+                for step in steps:
+
+                    detail.cell(
+                        row=current_row,
+                        column=1
+                    ).value = step[0]
+
+                    detail.cell(
+                        row=current_row,
+                        column=2
+                    ).value = step[1]
+
+                    detail.cell(
+                        row=current_row,
+                        column=3
+                    ).value = step[2]
+
+                    detail.cell(
+                        row=current_row,
+                        column=4
+                    ).value = step[3]
+
+                    for col in range(1, 5):
+
+                        detail.cell(
+                            row=current_row,
+                            column=col
+                        ).alignment = Alignment(
+                            vertical="top",
+                            wrap_text=True
+                        )
+
+                    current_row += 1
+
+            current_row += 1
+
+            self.create_section_header(
+                detail,
+                current_row,
+                "Son Koşullar"
+            )
+
+            current_row += 1
+
+            if not post:
+
+                detail.cell(
+                    row=current_row,
+                    column=2
+                ).value = "Son koşul bulunmuyor."
+
+            else:
+
+                for item in post:
+
+                    cell = detail.cell(
+                        row=current_row,
+                        column=2
+                    )
+
+                    cell.value = item[0]
+
+                    cell.alignment = Alignment(
+                        vertical="top",
+                        wrap_text=True
+                    )
+
+                    current_row += 1
+
+            row += 1
+
+        # -------------------------------------------------
+        # TEMPLATE'İ GİZLE
+        # -------------------------------------------------
+
+        template = workbook["Template"]
+
+        workbook._sheets.remove(
+            template
+        )
+
+        workbook._sheets.append(
+            template
+        )
+
+        template.sheet_state = "hidden"
+
+        # -------------------------------------------------
+        # EXCEL'İ KAYDET
+        # -------------------------------------------------
+
+        workbook.save(
+            project_excel_path
+        )
+
+        return project_excel_path
+
     def apply_label_style(
         self,
         cell
@@ -383,6 +1053,433 @@ class ExcelExporter:
             horizontal="left",
             vertical="center"
         )
+
+    def export_single_test(self, tc_id):
+
+        test = self.db.get_test_case(tc_id)
+
+        if not test:
+            raise ValueError(
+                f"{tc_id} bulunamadı."
+            )
+
+        # -------------------------------------------------
+        # Teste özel Excel dosya yolu
+        # -------------------------------------------------
+
+        export_path = os.path.join(
+            EXPORT_DIR,
+            f"{tc_id}.xlsx"
+        )
+
+        # -------------------------------------------------
+        # Template'i aç
+        # -------------------------------------------------
+
+        workbook = load_workbook(
+            TEMPLATE_PATH
+        )
+
+        # Template sheet'i kullan
+        detail = workbook["Template"]
+
+        # Sheet adını TC ID yap
+        detail.title = tc_id
+
+        # -------------------------------------------------
+        # DATABASE VERİLERİ
+        # -------------------------------------------------
+
+        pre = self.db.get_pre_conditions(
+            tc_id
+        )
+
+        data = self.db.get_test_data(
+            tc_id
+        )
+
+        steps = self.db.get_test_steps(
+            tc_id
+        )
+
+        post = self.db.get_post_conditions(
+            tc_id
+        )
+
+        # -------------------------------------------------
+        # KOLON GENİŞLİKLERİ
+        # -------------------------------------------------
+
+        detail.column_dimensions["A"].width = 22
+        detail.column_dimensions["B"].width = 35
+        detail.column_dimensions["C"].width = 35
+        detail.column_dimensions["D"].width = 35
+
+        # -------------------------------------------------
+        # TEST BİLGİLERİ
+        # -------------------------------------------------
+
+        labels = [
+            "Test ID",
+            "Test Adı",
+            "Öncelik",
+            "Modül",
+            "Durum",
+            "Oluşturan",
+            "Oluşturulma Tarihi",
+            "Otomasyon"
+        ]
+
+        values = [
+            tc_id,
+            test[1],
+            test[2],
+            test[3],
+            test[4],
+            test[5],
+            test[6],
+            "Evet" if test[7] else "Hayır"
+        ]
+
+        for i, (label, value) in enumerate(
+            zip(labels, values),
+            start=2
+        ):
+
+            detail.cell(
+                row=i,
+                column=1
+            ).value = label
+
+            detail.cell(
+                row=i,
+                column=2
+            ).value = value
+
+            # Label stili
+            cell = detail.cell(
+                row=i,
+                column=1
+            )
+
+            cell.fill = PatternFill(
+                fill_type="solid",
+                fgColor="D9EAF7"
+            )
+
+            cell.font = Font(
+                bold=True
+            )
+
+        # -------------------------------------------------
+        # DİNAMİK BÖLÜMLER
+        # -------------------------------------------------
+
+        current_row = 11
+
+        # -------------------------------------------------
+        # OTOMASYON BİLGİLERİ
+        # -------------------------------------------------
+
+        self.create_section_header(
+            detail,
+            current_row,
+            "Otomasyon Bilgileri"
+        )
+
+        current_row += 1
+
+        automation_labels = [
+            "Otomasyonlaştırılsın mı?",
+            "Otomasyonlaştırıldı mı?",
+            "Otomasyon Senaryo Karşılığı"
+        ]
+
+        automation_values = [
+            (
+                "Evet"
+                if len(test) > 9
+                and test[9]
+                else "Hayır"
+            ),
+            (
+                "Evet"
+                if len(test) > 10
+                and test[10]
+                else "Hayır"
+            ),
+            (
+                test[11]
+                if len(test) > 11
+                and test[11]
+                else "-"
+            )
+        ]
+
+        for label, value in zip(
+            automation_labels,
+            automation_values
+        ):
+
+            label_cell = detail.cell(
+                row=current_row,
+                column=1
+            )
+
+            value_cell = detail.cell(
+                row=current_row,
+                column=2
+            )
+
+            label_cell.value = label
+            value_cell.value = value
+
+            label_cell.fill = PatternFill(
+                fill_type="solid",
+                fgColor="D9EAF7"
+            )
+
+            label_cell.font = Font(
+                bold=True
+            )
+
+            value_cell.alignment = Alignment(
+                vertical="top",
+                wrap_text=True
+            )
+
+            current_row += 1
+
+        current_row += 1
+
+        # -------------------------------------------------
+        # HATA BİLGİLERİ
+        # -------------------------------------------------
+
+        self.create_section_header(
+            detail,
+            current_row,
+            "Hata Bilgileri"
+        )
+
+        current_row += 1
+
+        error_labels = [
+            "Hata Kodu",
+            "Hata Önceliği"
+        ]
+
+        error_values = [
+            (
+                test[14]
+                if len(test) > 14
+                and test[14]
+                else "-"
+            ),
+            (
+                test[15]
+                if len(test) > 15
+                and test[15]
+                else "Yok"
+            )
+        ]
+
+        for label, value in zip(
+            error_labels,
+            error_values
+        ):
+
+            label_cell = detail.cell(
+                row=current_row,
+                column=1
+            )
+
+            value_cell = detail.cell(
+                row=current_row,
+                column=2
+            )
+
+            label_cell.value = label
+            value_cell.value = value
+
+            label_cell.fill = PatternFill(
+                fill_type="solid",
+                fgColor="D9EAF7"
+            )
+
+            label_cell.font = Font(
+                bold=True
+            )
+
+            value_cell.alignment = Alignment(
+                vertical="top",
+                wrap_text=True
+            )
+
+            current_row += 1
+
+        current_row += 1
+
+        # -------------------------------------------------
+        # PRECONDITIONS
+        # -------------------------------------------------
+
+        self.create_section_header(
+            detail,
+            current_row,
+            "Ön Koşullar"
+        )
+
+        current_row += 1
+
+        if not pre:
+
+            current_row += 1
+
+        else:
+
+            for item in pre:
+
+                detail.cell(
+                    row=current_row,
+                    column=2
+                ).value = item[0]
+
+                current_row += 1
+
+        current_row += 1
+
+        # -------------------------------------------------
+        # TEST DATA
+        # -------------------------------------------------
+
+        self.create_section_header(
+            detail,
+            current_row,
+            "Test Verileri"
+        )
+
+        current_row += 1
+
+        if not data:
+
+            current_row += 1
+
+        else:
+
+            for item in data:
+
+                detail.cell(
+                    row=current_row,
+                    column=2
+                ).value = item[0]
+
+                detail.cell(
+                    row=current_row,
+                    column=3
+                ).value = item[1]
+
+                current_row += 1
+
+        current_row += 1
+
+        # -------------------------------------------------
+        # TEST STEPS
+        # -------------------------------------------------
+
+        self.create_section_header(
+            detail,
+            current_row,
+            "Test Adımları"
+        )
+
+        current_row += 1
+
+        self.create_step_headers(
+            detail,
+            current_row
+        )
+
+        current_row += 1
+
+        if not steps:
+
+            current_row += 1
+
+        else:
+
+            for step in steps:
+
+                detail.cell(
+                    row=current_row,
+                    column=1
+                ).value = step[0]
+
+                detail.cell(
+                    row=current_row,
+                    column=2
+                ).value = step[1]
+
+                detail.cell(
+                    row=current_row,
+                    column=3
+                ).value = step[2]
+
+                detail.cell(
+                    row=current_row,
+                    column=4
+                ).value = step[3]
+
+                for col in range(1, 5):
+
+                    detail.cell(
+                        row=current_row,
+                        column=col
+                    ).alignment = Alignment(
+                        vertical="top",
+                        wrap_text=True
+                    )
+
+                current_row += 1
+
+        current_row += 1
+
+        # -------------------------------------------------
+        # POST CONDITIONS
+        # -------------------------------------------------
+
+        self.create_section_header(
+            detail,
+            current_row,
+            "Son Koşullar"
+        )
+
+        current_row += 1
+
+        if not post:
+
+            current_row += 1
+
+        else:
+
+            for item in post:
+
+                detail.cell(
+                    row=current_row,
+                    column=2
+                ).value = item[0]
+
+                current_row += 1
+
+        # -------------------------------------------------
+        # KAYDET
+        # -------------------------------------------------
+
+        workbook.save(
+            export_path
+        )
+
+        return export_path
 
     # =================================================
     # EXPORT
@@ -1233,7 +2330,10 @@ class ExcelExporter:
         # =================================================
 
         workbook.save(
-            EXPORT_PATH
+            os.path.join(
+                EXPORT_DIR,
+                "export.xlsx"
+            ) 
         )
 
         # =================================================

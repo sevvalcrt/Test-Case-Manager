@@ -205,24 +205,31 @@ class Dashboard(ctk.CTkFrame):
             lambda event: self.load_tests()
         )
 
-        # ==========================
+        # =================================================
         # TEST FİLTRESİ
-        # ==========================
+        # =================================================
 
-        filter_title = ctk.CTkLabel(
+        self.filter_open = False
+
+        self.filter_header = ctk.CTkButton(
             self.left_panel,
-            text="🔽 Test Filtresi",
-            font=("Segoe UI", 15, "bold")
+            text="▶  Test Filtresi",
+            height=35,
+            fg_color="transparent",
+            hover_color="#333333",
+            anchor="w",
+            font=("Segoe UI", 15, "bold"),
+            command=self.toggle_filters
         )
 
-        filter_title.pack(
-            anchor="w",
-            padx=15,
-            pady=(5, 5)
+        self.filter_header.pack(
+            fill="x",
+            padx=10,
+            pady=(5, 2)
         )
 
         # -------------------------------------------------
-        # FİLTRELER
+        # FİLTRE ALANI
         # -------------------------------------------------
 
         self.filter_frame = ctk.CTkFrame(
@@ -230,11 +237,8 @@ class Dashboard(ctk.CTkFrame):
             fg_color="transparent"
         )
 
-        self.filter_frame.pack(
-            fill="x",
-            padx=15,
-            pady=(0, 10)
-        )
+        # Burada başlangıçta pack ETMİYORUZ.
+        # toggle_filters açınca pack edecek.
 
         # -------------------------------------------------
         # TEST DURUMU
@@ -425,6 +429,36 @@ class Dashboard(ctk.CTkFrame):
     # =====================================================
     # CLEAR RIGHT PANEL
     # =====================================================
+
+    # =====================================================
+    # TOGGLE FILTERS
+    # =====================================================
+
+    def toggle_filters(self):
+
+        if self.filter_open:
+
+            self.filter_frame.pack_forget()
+
+            self.filter_header.configure(
+                text="▶  Test Filtresi"
+            )
+
+            self.filter_open = False
+
+        else:
+
+            self.filter_frame.pack(
+                fill="x",
+                padx=10,
+                pady=(0, 5)
+            )
+
+            self.filter_header.configure(
+                text="▼  Test Filtresi"
+            )
+
+            self.filter_open = True
 
     def clear_right_panel(self):
 
@@ -933,102 +967,6 @@ class Dashboard(ctk.CTkFrame):
             pady=(20, 5)
         )
 
-    # =====================================================
-    # TEST FILTER
-    # =====================================================
-
-    def filter_tests(self, tests):
-
-        selected_filter = self.filter_var.get()
-
-        # -------------------------------------------------
-        # TÜM TESTLER
-        # -------------------------------------------------
-
-        if selected_filter == "Tüm Testler":
-            return tests
-
-        # -------------------------------------------------
-        # OTOMASYONLAŞTIRILABİLİR
-        # -------------------------------------------------
-
-        if selected_filter == "Otomasyonlaştırılabilir":
-
-            return [
-                test
-                for test in tests
-                if len(test) > 9
-                and test[9] == 1
-            ]
-
-        # -------------------------------------------------
-        # OTOMASYONLAŞTIRILDI
-        # -------------------------------------------------
-
-        if selected_filter == "Otomasyonlaştırıldı":
-
-            return [
-                test
-                for test in tests
-                if len(test) > 10
-                and test[10] == 1
-            ]
-
-        # -------------------------------------------------
-        # OTOMASYON BEKLİYOR
-        # -------------------------------------------------
-
-        if selected_filter == "Otomasyon Bekliyor":
-
-            return [
-                test
-                for test in tests
-                if (
-                    len(test) > 10
-                    and test[9] == 1
-                    and test[10] == 0
-                )
-            ]
-
-        # -------------------------------------------------
-        # MANUEL TESTLER
-        # -------------------------------------------------
-
-        if selected_filter == "Manuel Testler":
-
-            return [
-                test
-                for test in tests
-                if (
-                    len(test) > 9
-                    and test[9] == 0
-                )
-            ]
-
-        # -------------------------------------------------
-        # DURUM FİLTRELERİ
-        # -------------------------------------------------
-
-        status_filters = [
-            "Başarılı",
-            "Başarısız",
-            "Beklemede",
-            "Devam Ediyor",
-            "Engellendi"
-        ]
-
-        if selected_filter in status_filters:
-
-            return [
-                test
-                for test in tests
-                if (
-                    len(test) > 8
-                    and test[8] == selected_filter
-                )
-            ]
-
-        return tests
 
     # =====================================================
     # LOAD TESTS
@@ -1292,16 +1230,19 @@ class Dashboard(ctk.CTkFrame):
                 self.db
             )
 
-            exporter.export()
+            excel_path = exporter.export_project(
+                self.project_name
+            )
 
             messagebox.showinfo(
                 "Başarılı",
-                "Excel başarıyla oluşturuldu."
+                f"Excel başarıyla güncellendi.\n\n"
+                f"Dosya:\n{excel_path}"
             )
 
         except Exception as e:
 
             messagebox.showerror(
-                "Hata",
-                str(e)
+                "Excel Aktarım Hatası",
+                f"Excel oluşturulurken bir hata oluştu:\n\n{e}"
             )

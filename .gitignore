@@ -5,3 +5,6 @@ venv/
 .env
 *.db
 export.xlsx
+exports/
+projects/*/*.xlsx
+.idea/

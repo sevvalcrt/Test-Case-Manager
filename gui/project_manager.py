@@ -1,5 +1,6 @@
 import os
 import customtkinter as ctk
+from excel.exporter import ExcelExporter
 from tkinter import messagebox
 
 
@@ -467,14 +468,51 @@ class ProjectManager(ctk.CTkFrame):
                 exist_ok=True
             )
 
-            dialog.destroy()
+            # ============================================
+            # PROJE İÇİN EXCEL OLUŞTUR
+            # ============================================
 
-            self.load_projects()
+            try:
 
-            messagebox.showinfo(
-                "Başarılı",
-                f"'{project_name}' projesi oluşturuldu."
-            )
+                from database.database import Database
+
+                db = Database(
+                    project_name
+                )
+
+                exporter = ExcelExporter(
+                    db
+                )
+
+                exporter.export_project(
+                    project_name
+                )
+
+                db.close()
+
+            except Exception as e:
+
+                messagebox.showerror(
+                    "Excel Hatası",
+                    f"Proje oluşturuldu fakat Excel oluşturulamadı:\n\n{e}",
+                    parent=dialog
+                )
+
+                return
+
+        dialog.destroy()
+
+        self.load_projects()
+
+        messagebox.showinfo(
+            "Başarılı",
+            f"'{project_name}' projesi oluşturuldu.\n\n"
+            f"Excel dosyası da oluşturuldu."
+        )
+
+        self.open_project(
+            project_name
+        )
 
         # -------------------------------------------------
         # Buton

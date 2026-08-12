@@ -2,8 +2,10 @@ from tkinter import messagebox
 import sqlite3
 import customtkinter as ctk
 from datetime import datetime
+import tkinter as tk
 
 from database.database import Database
+from excel.exporter import ExcelExporter
 
 
 class NewTestWindow(ctk.CTkToplevel):
@@ -28,7 +30,7 @@ class NewTestWindow(ctk.CTkToplevel):
             "Test Düzenle" if self.edit_mode else "Yeni Test Senaryosu"
         )
 
-        self.geometry("1100x850")
+        self.geometry("850x800")
         self.resizable(True, True)
 
         # NOT: Bu pencere kasıtlı olarak grab_set() ile modal
@@ -55,7 +57,7 @@ class NewTestWindow(ctk.CTkToplevel):
 
         form = ctk.CTkScrollableFrame(
             self,
-            width=850,
+            width=700,
         )
 
         form.pack(
@@ -634,6 +636,19 @@ class NewTestWindow(ctk.CTkToplevel):
         self.lift()
         self.focus_force()
         self.after(150, self._bring_to_front)
+        self.after(
+            200,
+            lambda: self.bind_context_menus(self.form)
+        )
+
+        # =====================================================
+        # SAĞ TIK MENÜLERİ
+        # =====================================================
+
+        self.after(
+            200,
+            lambda: self.bind_context_menus(self.form)
+        )
 
     def _bring_to_front(self):
 
@@ -642,6 +657,61 @@ class NewTestWindow(ctk.CTkToplevel):
             self.focus_force()
         except Exception:
             pass
+
+    def bind_context_menus(self, parent):
+
+        for widget in parent.winfo_children():
+
+            if isinstance(
+                widget,
+                (ctk.CTkEntry, ctk.CTkTextbox)
+            ):
+                widget.bind(
+                    "<Button-3>",
+                    self.show_context_menu
+                )
+
+            if widget.winfo_children():
+                self.bind_context_menus(widget)
+
+    def show_context_menu(self, event):
+
+        widget = event.widget
+
+        menu = tk.Menu(
+            self,
+            tearoff=0
+        )
+
+        menu.add_command(
+            label="Kes",
+            command=lambda: widget.event_generate("<<Cut>>")
+        )
+
+        menu.add_command(
+            label="Kopyala",
+            command=lambda: widget.event_generate("<<Copy>>")
+        )
+
+        menu.add_command(
+            label="Yapıştır",
+            command=lambda: widget.event_generate("<<Paste>>")
+        )
+
+        menu.add_separator()
+
+        menu.add_command(
+            label="Tümünü Seç",
+            command=lambda: widget.event_generate("<<SelectAll>>")
+        )
+
+        try:
+            menu.tk_popup(
+                event.x_root,
+                event.y_root
+            )
+        finally:
+            menu.grab_release()
 
     # =========================================================
     # SCROLL KONTROLLERİ
@@ -1447,12 +1517,38 @@ class NewTestWindow(ctk.CTkToplevel):
                     )
 
             # =================================================
+            # EXCEL OLUŞTUR
+            # =================================================
+
+            try:
+
+                exporter = ExcelExporter(
+                    self.db
+                )
+
+                exporter.export_single_test(
+                    tc_id
+                )
+
+            except Exception as e:
+
+                messagebox.showerror(
+                    "Excel Hatası",
+                    f"Test kaydedildi fakat Excel oluşturulamadı:\n\n{e}"
+                )
+
+                self.refresh_callback()
+                self.close_window()
+                return
+
+
+            # =================================================
             # BAŞARILI
             # =================================================
 
             messagebox.showinfo(
                 "Başarılı",
-                "Test başarıyla kaydedildi."
+                "Test başarıyla kaydedildi ve Excel dosyası oluşturuldu."
             )
 
             self.refresh_callback()
